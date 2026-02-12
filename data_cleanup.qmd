@@ -1,0 +1,49 @@
+# load library
+```{python}
+import pandas as pd
+```
+
+# import full dataset
+```{python}
+drug_info = pd.read_csv("ORIG_ASCII/DRUG25Q4.txt", sep = "$")
+
+drug_info.head()
+drug_info.tail()
+
+len(drug_info) #1815349 rows
+
+```
+
+# filter dataset by only showing isotretinoin brands
+```{python}
+isotretinoin_brands = [
+    "ROACCUTANE",
+    "ACCUTANE",
+    "CLARAVIS",
+    "AMNESTEEM",
+    "SOTRET",
+    "ABSORICA",
+    "MYORISAN",
+    "ZENATANE"
+]
+
+iso_drugs = drug_info[drug_info["drugname"].isin(isotretinoin_brands)]
+iso_drugs.head(30)
+
+len(iso_drugs) #590 rows
+
+```
+
+# DRUG file has different drug roles: PS = Primary Suspect, SS = Secondary Suspect, C = Concomitant, I = Interacting
+# Only include PS
+```{python}
+ps_iso_drugs = iso_drugs[iso_drugs["role_cod"] == "PS"]
+ps_iso_drugs.head(30)
+
+len(ps_iso_drugs) # 365 rows
+```
+
+# save cleaned isotretinoin drug data
+```{python}
+ps_iso_drugs.to_csv("ISO_DRUG_INFO.txt", sep = "$")
+```

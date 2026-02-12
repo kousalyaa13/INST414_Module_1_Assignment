@@ -1,0 +1,11 @@
+# Ignore raw FAERS ASCII folder
+ORIG_ASCII/
+
+# Ignore all FAERS raw text files
+DRUG*.txt
+DEMO*.txt
+REAC*.txt
+OUTC*.txt
+RPSR*.txt
+THER*.txt
+INDI*.txt
