@@ -6,29 +6,22 @@ import pandas as pd
 # import full DRUG dataset
 ```{python}
 drug_info = pd.read_csv("ORIG_ASCII/DRUG25Q4.txt", sep = "$")
-drug_info
+drug_info #1815349 rows × 20 columns
+```
+
+# remove uneeded columns
+```{python}
+filtered_drug_info = drug_info.drop(columns = ["route", "rechal", "lot_num", "exp_dt", "nda_num", "dose_form", "cum_dose_chr", "cum_dose_unit"])
+
+filtered_drug_info #1815349 rows × 12 columns
 ```
 
 # filter DRUG dataset by only showing isotretinoin brands
 ```{python}
-isotretinoin_brands = [
-    "ROACCUTANE",
-    "ACCUTANE",
-    "CLARAVIS",
-    "AMNESTEEM",
-    "SOTRET",
-    "ABSORICA",
-    "MYORISAN",
-    "ZENATANE"
-]
-
 # filter product for ISOTRETINOIN
-iso_drugs = drug_info[drug_info["prod_ai"] == "ISOTRETINOIN"]
+iso_drugs = filtered_drug_info[drug_info["prod_ai"] == "ISOTRETINOIN"]
 
-# filter specific generally prescribed ISOTRETINOIN trade names
-#iso_drugs = drug_info[drug_info["drugname"].isin(isotretinoin_brands)]
-
-iso_drugs
+iso_drugs #2067 rows × 12 columns
 ```
 
 # remove duplicates of the same case
@@ -36,33 +29,40 @@ iso_drugs
 ```{python}
 iso_drugs = iso_drugs.drop_duplicates(subset = "caseid", keep = "first")
 
-iso_drugs
+iso_drugs #1508 rows × 12 columns
 ```
 
 # only include PS = Primary Suspect
 ```{python}
 iso_drugs = iso_drugs[iso_drugs["role_cod"] == "PS"]
-iso_drugs
+
+iso_drugs #1433 rows × 12 columns
 ```
 
 # save cleaned isotretinoin DRUG data
 ```{python}
 iso_drugs.to_csv("ISO_DRUG_INFO.txt", sep = "$")
+
 iso_drugs
 ```
 
 # clean REAC data
 ```{python}
 reaction_info = pd.read_csv("ORIG_ASCII\REAC25Q4.txt", sep = "$")
-reaction_info
+
+reaction_info #1349105 rows × 4 columns
 ```
 
 # join with DRUG table with primary key
 ```{python}
 # inner join to keep only the matching reports
 iso_reactions = iso_drugs.merge(reaction_info, on = "primaryid", how = "inner")
-iso_reactions
 
+iso_reactions #2265 rows × 15 columns
+```
+
+# filter by psychiatric disorder key terms
+```{python}
 # view all reactions mentioned
 unique_reactions = iso_reactions["pt"].unique()
 unique_reactions
@@ -116,10 +116,16 @@ psych_pt_list = {
 }
 # lower case
 iso_reactions["pt_lower"] = iso_reactions["pt"].astype(str).str.lower().str.strip()
-iso_reactions
 
 # filter
 psych_iso = iso_reactions[iso_reactions["pt_lower"].isin(psych_pt_list)]
-psych_iso
 
+psych_iso # 344 rows × 16 columns
+```
+
+# save cleaned isotretinoin REAC data
+```{python}
+psych_iso.to_csv("ISO_REAC_INFO.txt", sep = "$")
+
+psych_iso
 ```
