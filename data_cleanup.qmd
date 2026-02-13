@@ -3,71 +3,68 @@
 import pandas as pd
 ```
 
-# import full DRUG dataset
+# load full FAERS DRUG table (one row per drug per report)
 ```{python}
 drug_info = pd.read_csv("ORIG_ASCII/DRUG25Q4.txt", sep = "$")
-drug_info #1815349 rows × 20 columns
+drug_info # 1815349 rows × 20 columns
 ```
 
-# remove uneeded columns
+# drop columns not needed for this analysis (keep identifiers + drug fields)
 ```{python}
 filtered_drug_info = drug_info.drop(columns = ["route", "rechal", "lot_num", "exp_dt", "nda_num", "dose_form", "cum_dose_chr", "cum_dose_unit"])
 
-filtered_drug_info #1815349 rows × 12 columns
+filtered_drug_info # 1815349 rows × 12 columns
 ```
 
-# filter DRUG dataset by only showing isotretinoin brands
+# subset to isotretinoin (generic ingredient = ISOTRETINOIN)
 ```{python}
 # filter product for ISOTRETINOIN
 iso_drugs = filtered_drug_info[drug_info["prod_ai"] == "ISOTRETINOIN"]
 
-iso_drugs #2067 rows × 12 columns
+iso_drugs # 2067 rows × 12 columns
 ```
 
-# remove duplicates of the same case
-# if duplicates exist, keep the row with the highest case id
+# if the same CASEID appears multiple times, keep one record per CASEID
 ```{python}
 iso_drugs = iso_drugs.drop_duplicates(subset = "caseid", keep = "first")
 
-iso_drugs #1508 rows × 12 columns
+iso_drugs # 1508 rows × 12 columns
 ```
 
-# only include PS = Primary Suspect
+# keep only Primary Suspect (PS) drug role for isotretinoin
 ```{python}
 iso_drugs = iso_drugs[iso_drugs["role_cod"] == "PS"]
 
-iso_drugs #1433 rows × 12 columns
+iso_drugs # 1433 rows × 12 columns
 ```
 
 # save cleaned isotretinoin DRUG data
 ```{python}
 iso_drugs.to_csv("ISO_DRUG_INFO.txt", sep = "$")
-
-iso_drugs
 ```
 
-# load REAC data
+# load full FAERS REAC table (reaction Preferred Terms per report)
 ```{python}
 reaction_info = pd.read_csv("ORIG_ASCII\REAC25Q4.txt", sep = "$")
 
-reaction_info #1349105 rows × 4 columns
+reaction_info # 1349105 rows × 4 columns
 ```
 
-# join with DRUG table with primary key
+# join DRUG → REAC using PRIMARYID: keeps reactions for isotretinoin PS reports
 ```{python}
-# inner join to keep only the matching reports
 iso_reactions = iso_drugs.merge(reaction_info, on = "primaryid", how = "inner")
 
-iso_reactions #2265 rows × 15 columns
+iso_reactions # 2265 rows × 15 columns
 ```
 
-# filter by psychiatric disorder key terms
+# identify psychiatric-related reactions using a curated list of MedDRA Preferred Terms (PTs)
+# (proxy approach since official MedDRA SOC mappings require a license)
 ```{python}
-# view all reactions mentioned
+# list unique PTs observed
 unique_reactions = iso_reactions["pt"].unique()
 unique_reactions
 
-# create a list of psychiatric disorders
+# create a pt list of psychiatric disorders
 psych_pt_list = {
     "completed suicide",
     "suicidal ideation",
@@ -114,46 +111,42 @@ psych_pt_list = {
     "insomnia",
     "nightmare"
 }
-# lower case
+# normalize PT text for matching
 iso_reactions["pt_lower"] = iso_reactions["pt"].astype(str).str.lower().str.strip()
 
-# filter
+# filter to psychiatric PT rows
 psych_iso = iso_reactions[iso_reactions["pt_lower"].isin(psych_pt_list)]
 
 psych_iso # 344 rows × 16 columns
 ```
 
-# save cleaned isotretinoin REAC data
+# save psychiatric reaction subset
 ```{python}
 psych_iso.to_csv("ISO_REAC_INFO.txt", sep = "$")
-
-psych_iso
 ```
 
-# clean DEMO dataset for demographic information
+# load FAERS DEMO table (patient demographics)
 ```{python}
 demo_info = pd.read_csv("ORIG_ASCII/DEMO25Q4.txt", sep = "$", low_memory = False)
 demo_info # 385288 rows × 25 columns
 ```
 
-# remove uneeded columns
+# drop fields not used in this exploratory analysis (keep demographics + identifiers)
 ```{python}
 filtered_demo_info = demo_info.drop(columns = ["rept_dt", "to_mfr", "e_sub", "mfr_num", "mfr_sndr", "init_fda_dt", "fda_dt", "mfr_dt", "event_dt"])
-filtered_demo_info #385288 rows × 16 columns
+filtered_demo_info # 385288 rows × 16 columns
 ```
 
-# join on primary_id
+# join DEMO to psychiatric reactions using PRIMARYID
 ```{python}
 iso_demo = filtered_demo_info.merge(psych_iso, on = "primaryid", how = "inner")
 
-iso_demo #344 rows x 31 columns
+iso_demo # 344 rows x 31 columns
 ```
 
-# save demographic data and fully cleaned data
+# save final merged dataset (psychiatric reactions + demographics)
 ```{python}
 iso_demo.to_csv("ISO_DEMO_INFO.txt", sep = "$")
 
 iso_demo.to_csv("ISO_CLEANED.txt", sep = "$")
-
-iso_demo
 ```
