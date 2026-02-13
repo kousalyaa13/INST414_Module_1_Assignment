@@ -3,18 +3,13 @@
 import pandas as pd
 ```
 
-# import full dataset
+# import full DRUG dataset
 ```{python}
 drug_info = pd.read_csv("ORIG_ASCII/DRUG25Q4.txt", sep = "$")
-
-drug_info.head()
-drug_info.tail()
-
-len(drug_info) #1815349 rows
-
+drug_info
 ```
 
-# filter dataset by only showing isotretinoin brands
+# filter DRUG dataset by only showing isotretinoin brands
 ```{python}
 isotretinoin_brands = [
     "ROACCUTANE",
@@ -27,23 +22,104 @@ isotretinoin_brands = [
     "ZENATANE"
 ]
 
-iso_drugs = drug_info[drug_info["drugname"].isin(isotretinoin_brands)]
-iso_drugs.head(30)
+# filter product for ISOTRETINOIN
+iso_drugs = drug_info[drug_info["prod_ai"] == "ISOTRETINOIN"]
 
-len(iso_drugs) #590 rows
+# filter specific generally prescribed ISOTRETINOIN trade names
+#iso_drugs = drug_info[drug_info["drugname"].isin(isotretinoin_brands)]
 
+iso_drugs
 ```
 
-# DRUG file has different drug roles: PS = Primary Suspect, SS = Secondary Suspect, C = Concomitant, I = Interacting
-# Only include PS
+# remove duplicates of the same case
+# if duplicates exist, keep the row with the highest case id
 ```{python}
-ps_iso_drugs = iso_drugs[iso_drugs["role_cod"] == "PS"]
-ps_iso_drugs.head(30)
+iso_drugs = iso_drugs.drop_duplicates(subset = "caseid", keep = "first")
 
-len(ps_iso_drugs) # 365 rows
+iso_drugs
 ```
 
-# save cleaned isotretinoin drug data
+# only include PS = Primary Suspect
 ```{python}
-ps_iso_drugs.to_csv("ISO_DRUG_INFO.txt", sep = "$")
+iso_drugs = iso_drugs[iso_drugs["role_cod"] == "PS"]
+iso_drugs
+```
+
+# save cleaned isotretinoin DRUG data
+```{python}
+iso_drugs.to_csv("ISO_DRUG_INFO.txt", sep = "$")
+iso_drugs
+```
+
+# clean REAC data
+```{python}
+reaction_info = pd.read_csv("ORIG_ASCII\REAC25Q4.txt", sep = "$")
+reaction_info
+```
+
+# join with DRUG table with primary key
+```{python}
+# inner join to keep only the matching reports
+iso_reactions = iso_drugs.merge(reaction_info, on = "primaryid", how = "inner")
+iso_reactions
+
+# view all reactions mentioned
+unique_reactions = iso_reactions["pt"].unique()
+unique_reactions
+
+# create a list of psychiatric disorders
+psych_pt_list = {
+    "completed suicide",
+    "suicidal ideation",
+    "suicide attempt",
+    "self-injurious ideation",
+    "intentional self-injury",
+    "depression",
+    "depressed mood",
+    "depressive symptom",
+    "major depression",
+    "persistent depressive disorder",
+    "affective disorder",
+    "mood altered",
+    "mood swings",
+    "affect lability",
+    "irritability",
+    "anxiety",
+    "panic attack",
+    "panic reaction",
+    "nervousness",
+    "agitation",
+    "aggression",
+    "abnormal behaviour",
+    "confusional state",
+    "delusion",
+    "psychotic disorder",
+    "post-traumatic stress disorder",
+    "mental disorder",
+    "psychiatric symptom",
+    "mental status changes",
+    "intrusive thoughts",
+    "negative thoughts",
+    "body dysmorphic disorder",
+    "self esteem decreased",
+    "stress",
+    "anger",
+    "homicidal ideation",
+    "homicide",
+    "apathy",
+    "flat affect",
+    "abulia",
+    "brain fog",
+    "sleep disorder",
+    "insomnia",
+    "nightmare"
+}
+# lower case
+iso_reactions["pt_lower"] = iso_reactions["pt"].astype(str).str.lower().str.strip()
+iso_reactions
+
+# filter
+psych_iso = iso_reactions[iso_reactions["pt_lower"].isin(psych_pt_list)]
+psych_iso
+
 ```
