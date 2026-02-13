@@ -46,7 +46,7 @@ iso_drugs.to_csv("ISO_DRUG_INFO.txt", sep = "$")
 iso_drugs
 ```
 
-# clean REAC data
+# load REAC data
 ```{python}
 reaction_info = pd.read_csv("ORIG_ASCII\REAC25Q4.txt", sep = "$")
 
@@ -128,4 +128,32 @@ psych_iso # 344 rows × 16 columns
 psych_iso.to_csv("ISO_REAC_INFO.txt", sep = "$")
 
 psych_iso
+```
+
+# clean DEMO dataset for demographic information
+```{python}
+demo_info = pd.read_csv("ORIG_ASCII/DEMO25Q4.txt", sep = "$", low_memory = False)
+demo_info # 385288 rows × 25 columns
+```
+
+# remove uneeded columns
+```{python}
+filtered_demo_info = demo_info.drop(columns = ["rept_dt", "to_mfr", "e_sub", "mfr_num", "mfr_sndr", "init_fda_dt", "fda_dt", "mfr_dt", "event_dt"])
+filtered_demo_info #385288 rows × 16 columns
+```
+
+# join on primary_id
+```{python}
+iso_demo = filtered_demo_info.merge(psych_iso, on = "primaryid", how = "inner")
+
+iso_demo #344 rows x 31 columns
+```
+
+# save demographic data and fully cleaned data
+```{python}
+iso_demo.to_csv("ISO_DEMO_INFO.txt", sep = "$")
+
+iso_demo.to_csv("ISO_CLEANED.txt", sep = "$")
+
+iso_demo
 ```
