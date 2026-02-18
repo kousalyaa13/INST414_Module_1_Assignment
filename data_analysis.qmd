@@ -14,8 +14,8 @@ demo_info = pd.read_csv("ORIG_ASCII/DEMO25Q4.txt", sep="$", low_memory=False)
 ```{python}
 iso_reactions_all = iso_drugs.merge(
     reaction_info,
-    on="primaryid",
-    how="inner"
+    on = "primaryid",
+    how = "inner"
 )
 iso_reactions_all
 ```
@@ -24,8 +24,8 @@ iso_reactions_all
 ```{python}
 iso_full = iso_reactions_all.merge(
     demo_info,
-    on="primaryid",
-    how="left"
+    on = "primaryid",
+    how = "left"
 )
 iso_full
 ```
@@ -44,17 +44,13 @@ iso_full[["primaryid", "sex"]].drop_duplicates().head()
 
 # aggregate for report comparision
 ```{python}
-report_level = (
-    iso_full
-    .groupby("primaryid")
+report_level = (iso_full.groupby("primaryid")
     .agg(
         is_psych_report = ("is_psych_event", "max"),
         age = ("age", "first"),
         sex = ("sex", "first")
-    )
-    .reset_index()
-)
-report_level
+    ).reset_index()
+) report_level
 ```
 
 ```{python}
@@ -63,34 +59,19 @@ report_level["is_psych_report"].value_counts()
 
 # sex comparision
 ```{python}
-pd.crosstab(
-    report_level["sex"],
-    report_level["is_psych_report"],
-    normalize="index"
-)
+pd.crosstab(report_level["sex"], report_level["is_psych_report"], normalize="index")
 ```
 
-# age group comparision
+# age group comparsion
 ```{python}
 bins = [0, 17, 25, 40, 65, 100]
 labels = ["<18", "18-25", "26-40", "41-65", "65+"]
 
-report_level["age_group"] = pd.cut(
-    report_level["age"],
-    bins=bins,
-    labels=labels
-)
+report_level["age_group"] = pd.cut(report_level["age"], bins = bins, labels = labels)
 
-pd.crosstab(
-    report_level["age_group"],
-    report_level["is_psych_report"],
-    normalize="index"
-)
+pd.crosstab(report_level["age_group"], report_level["is_psych_report"], normalize = "index")
 
-pd.crosstab(
-    report_level["age_group"],
-    report_level["is_psych_report"]
-)
+pd.crosstab(report_level["age_group"], report_level["is_psych_report"])
 ```
 
 # overall psychiatric reporting rate
@@ -101,29 +82,20 @@ labels = ["Nonpsychiatric", "Psychiatric"]
 colors = ["#75729fff", "#C44E52"]
 
 plt.figure()
-plt.bar(labels, counts, color=colors)
+plt.bar(labels, counts, color = colors)
 
 plt.ylabel("Number of Reports")
 plt.title("Isotretinoin Reports: Psychiatric vs Nonpsychiatric AEs")
 
 plt.show()
-
 ```
 
 # psychiatric reporting by sex
 ```{python}
-sex_table = pd.crosstab(
-    report_level["sex"],
-    report_level["is_psych_report"],
-    normalize="index"
-)
+sex_table = pd.crosstab(report_level["sex"], report_level["is_psych_report"], normalize="index")
 
 plt.figure()
-plt.bar(
-    sex_table.index,
-    sex_table[True],
-    color=["#b04c8aff", "#1F3B73"]
-)
+plt.bar(sex_table.index, sex_table[True], color = ["#b04c8aff", "#1F3B73"])
 
 plt.ylabel("Proportion with Psychiatric AE")
 plt.title("Psychiatric Reporting Proportion by Sex")
@@ -136,18 +108,10 @@ plt.show()
 
 # psychiatric proportion by age group
 ```{python}
-age_table = pd.crosstab(
-    report_level["age_group"],
-    report_level["is_psych_report"],
-    normalize="index"
-)
+age_table = pd.crosstab(report_level["age_group"], report_level["is_psych_report"], normalize = "index")
 
 plt.figure()
-plt.bar(
-    age_table.index.astype(str),
-    age_table[True],
-    color="#DD8452"
-)
+plt.bar(age_table.index.astype(str), age_table[True], color="#DD8452")
 
 plt.ylabel("Proportion with Psychiatric AE")
 plt.title("Psychiatric Reporting Proportion by Age Group")
