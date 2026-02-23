@@ -1,4 +1,5 @@
-# Exploratory Analysis of Exploratory Analysis
+# Is Accutane Linked to Psychiatric Side Effects?  
+## Exploratory Analysis of FAERS Q4 2025 Data
 
 This project explores whether psychiatric adverse events are frequently reported among isotretinoin (Accutane) users in the FDA Adverse Event Reporting System (FAERS).
 
